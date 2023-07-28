@@ -1,0 +1,36 @@
+{
+  "name": "Helpr",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "husky": {
+    "hooks": {
+      "pre-commit": "prettier --write . && git add -A ."
+    }
+  },
+  "lint-staged": {
+    "*": "prettier --write"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "prettier --check .",
+    "format": "prettier --write ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EricKogut/Helpr.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EricKogut/Helpr/issues"
+  },
+  "homepage": "https://github.com/EricKogut/Helpr#readme",
+  "dependencies": {
+    "husky": "^8.0.3"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0"
+  }
+}
