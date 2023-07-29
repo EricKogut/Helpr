@@ -1,7 +1,6 @@
-import { Flex } from '@chakra-ui/react';
-
+import { Landing } from 'components/pages/Landing/Landing';
 const Index = () => {
-  return <Flex>{'This is the landing paged'}</Flex>;
+  return <Landing />;
 };
 
 export default Index;
