@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import socket from './Socket/Socket';
+import { Heading } from '@chakra-ui/react';
 
 export const AudioRecorder = () => {
   const [streaming, setStreaming] = useState<boolean>(false);
@@ -7,6 +8,7 @@ export const AudioRecorder = () => {
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(
     null
   );
+  const [transcription, setTranscription] = useState<string>('');
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Array<Blob>>([]);
@@ -49,6 +51,8 @@ export const AudioRecorder = () => {
 
   useEffect(() => {
     socket.on('transcription', (transcription) => {
+      setTranscription(transcription);
+
       console.log('Transcription:', transcription);
     });
 
@@ -86,6 +90,8 @@ export const AudioRecorder = () => {
   return (
     <div>
       <audio ref={setAudioElement} autoPlay muted />
+
+      <Heading>{transcription}</Heading>
       <button onClick={startStreaming} disabled={streaming}>
         Start Streaming
       </button>

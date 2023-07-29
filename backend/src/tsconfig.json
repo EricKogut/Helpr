@@ -4,7 +4,8 @@
     {     
         "target": "es5",
         "module": "commonjs",
-        "outDir": "dist",
+        "rootDir": "./src", // Specify the source directory of TypeScript files
+        "outDir": "./build",
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,

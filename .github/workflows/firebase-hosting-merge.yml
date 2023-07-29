@@ -11,6 +11,7 @@ jobs:
       - name: Build Frontend
         working-directory: frontend/helpr
         run: |
+          echo "NEXT_PUBLIC_BACKEND_URL=${{ secrets.NEXT_PUBLIC_BACKEND_URL }}" >> .env.local
           npm ci
           npm run build
       - name: Deploy to Firebase Hosting

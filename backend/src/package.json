@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "concurrently \"npx tsc --watch\" \"nodemon -q ./dist/index.js\"",
-    "start": "nodemon index.ts"
+    "start": "node build/index.js"
   },
   "keywords": [],
   "author": "",
@@ -18,7 +18,7 @@
     "concurrently": "^7.2.2",
     "nodemon": "^2.0.18",
     "ts-node": "^10.8.1",
-    "typescript": "^4.7.4"
+    "typescript": "^4.9.5"
   },
   "dependencies": {
     "@google-cloud/speech": "^4.10.2",

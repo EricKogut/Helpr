@@ -5,7 +5,7 @@ import { SpeechClient } from '@google-cloud/speech';
 import cors from 'cors';
 
 const app = express();
-const port = 3001;
+const port = 8080;
 const httpServer = http.createServer(app);
 
 app.use(cors());
@@ -13,7 +13,7 @@ app.use(cors());
 // TODO: replace this with the firebaseURL
 const io = new Server(httpServer, {
   cors: {
-    origin: 'http://localhost:3000', 
+    origin: '*',
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -28,19 +28,19 @@ const audioStreams: { [key: string]: Buffer[] } = {};
 io.on('connection', (socket: Socket) => {
   console.log('New connection');
   console.log(socket.id);
-  audioStreams[socket.id] = []; 
+  audioStreams[socket.id] = [];
 
   socket.on('audio-chunk', async (data: Buffer) => {
     console.log('audio chunk received');
-   
+
     audioStreams[socket.id].push(data);
 
     try {
       const audioBuffer = Buffer.concat(audioStreams[socket.id]);
       const [response] = await speechClient.recognize({
         config: {
-          encoding: 0, 
-          sampleRateHertz: 48000, 
+          encoding: 0,
+          sampleRateHertz: 48000,
           languageCode: 'en-US',
         },
         audio: {
