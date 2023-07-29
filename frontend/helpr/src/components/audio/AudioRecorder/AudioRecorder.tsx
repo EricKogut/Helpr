@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import socket from './Socket/Socket';
 
 export const AudioRecorder = () => {
-  const [streaming, setStreaming] = useState(false);
-  const [audioStream, setAudioStream] = useState(null);
-  const [audioElement, setAudioElement] = useState(null);
+  const [streaming, setStreaming] = useState<boolean>(false);
+  const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(
+    null
+  );
 
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Array<Blob>>([]);
 
   const startStreaming = async () => {
     console.log('starting stream');
