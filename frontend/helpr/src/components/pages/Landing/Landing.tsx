@@ -51,9 +51,9 @@ export const Landing = () => {
             </Text>
           </Heading>
           <Text color={'gray.500'}>
-            We understand that everyone's mental health needs are unique, and
-            that's why Helpr is tailored to provide personalized support,
-            interactive exercises, and goal-oriented conversations.
+            We understand that everyone&apos;s mental health needs are unique,
+            and that&apos; why Helpr is tailored to provide personalized
+            support, interactive exercises, and goal-oriented conversations.
           </Text>
           <Stack
             spacing={{ base: 4, sm: 6 }}
