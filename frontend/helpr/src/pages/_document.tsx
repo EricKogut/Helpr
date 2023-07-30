@@ -5,7 +5,7 @@ export default class Document extends NextDocument {
   render() {
     return (
       <Html>
-        <title>Helpr</title>
+        <title>Helpr Health</title>
         <Head>
           <link rel='shortcut icon' href='favicon.ico' />
         </Head>
