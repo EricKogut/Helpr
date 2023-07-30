@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import socket from './Socket/Socket';
-import { Heading } from '@chakra-ui/react';
+import helprLogo from 'assets/helpr-logo.png';
+
+import {
+  chakra,
+  Flex,
+  useColorModeValue,
+  Image,
+  Button,
+} from '@chakra-ui/react';
+import HelprLoading from 'components/Loading/HelprLoading';
 
 export const AudioRecorder = () => {
   const [streaming, setStreaming] = useState<boolean>(false);
@@ -9,12 +18,22 @@ export const AudioRecorder = () => {
     null
   );
   const [transcription, setTranscription] = useState<string>('');
+  const [responseLoading, setResponseLoading] = useState<boolean>(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Array<Blob>>([]);
 
+  const startStopStreaming = () => {
+    setStreaming((prevStreaming) => !prevStreaming);
+    // Put your start and stop streaming logic here
+    if (!streaming) {
+      startStreaming();
+    } else {
+      stopStreaming();
+    }
+  };
+
   const startStreaming = async () => {
-    console.log('starting stream');
     setStreaming(true);
 
     try {
@@ -47,12 +66,13 @@ export const AudioRecorder = () => {
     setAudioStream(null);
     setStreaming(false);
     socket.emit('stop-streaming');
+    setResponseLoading(true);
   };
 
   useEffect(() => {
     socket.on('transcription', (transcription) => {
       setTranscription(transcription);
-
+      setResponseLoading(false);
       console.log('Transcription:', transcription);
     });
 
@@ -88,18 +108,48 @@ export const AudioRecorder = () => {
   }, []);
 
   return (
-    <div>
-      <audio ref={setAudioElement} autoPlay muted />
+    <Flex
+      boxShadow={'lg'}
+      maxW={'640px'}
+      direction={{ base: 'column-reverse', md: 'row' }}
+      width={'full'}
+      rounded={'xl'}
+      p={10}
+      justifyContent={'space-between'}
+      position={'relative'}
+      bg={useColorModeValue('white', 'gray.800')}
+    >
+      <div>
+        {transcription}
+        <audio ref={setAudioElement} autoPlay muted />
+        <Button onClick={startStopStreaming} disabled={false}>
+          {streaming ? 'Stop' : 'Talk'}
+        </Button>
+      </div>
+      <Flex
+        direction={'column'}
+        textAlign={'left'}
+        justifyContent={'space-between'}
+      >
+        <chakra.p fontWeight={'medium'} fontSize={'15px'} pb={4}>
+          {'TEXT 1'}
+        </chakra.p>
 
-      <Heading>{transcription}</Heading>
-      <button onClick={startStreaming} disabled={streaming}>
-        Start Streaming
-      </button>
-      <button onClick={stopStreaming} disabled={!streaming}>
-        Stop Streaming
-      </button>
-    </div>
+        <chakra.p fontWeight={'bold'} fontSize={14}>
+          {'TEXT 2'}
+
+          <chakra.span fontWeight={'medium'} color={'gray.500'}>
+            {' '}
+            {'TEXT 3'}
+          </chakra.span>
+        </chakra.p>
+      </Flex>
+      {responseLoading ? (
+        <HelprLoading />
+      ) : (
+        <Image src={helprLogo.src} alt='helpr-logo' width={20} />
+      )}
+    </Flex>
   );
 };
-
 export default AudioRecorder;

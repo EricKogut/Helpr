@@ -1,6 +1,12 @@
-import HelprLoading from 'components/Loading/HelprLoading';
+import Chat from 'components/Chat/Chat';
+import { Container } from 'components/common/Container';
+
 const Helpr = () => {
-  return <HelprLoading />;
+  return (
+    <Container>
+      <Chat />
+    </Container>
+  );
 };
 
 export default Helpr;
