@@ -8,6 +8,7 @@ dotenv.config();
 import { transcribeAudio } from './modules/GoogleCloud';
 import { generateChatResponse } from './modules/ChatGPT';
 import { textToSpeech } from './modules/ElevenLabs';
+import { classifyMentalHealthInputs } from './modules/Cohere';
 
 const app = express();
 const port = 8080;
@@ -71,7 +72,11 @@ io.on('connection', (socket) => {
               (result.alternatives && result.alternatives[0].transcript) || ''
           )
           .join('\n');
+        const classificationScore = await classifyMentalHealthInputs([
+          transcript,
+        ]);
 
+        console.log(classificationScore);
         const initialSetup =
           ' As an AI therapist or doctor or whatnot, engage with me in a conversation about my feelings and thoughts surrounding [insert issue or concern]. Ask me questions to better understand my situation and provide guidance on how to cope with or overcome this challenge. Introduce yourself as Helpr, the companion. Give them steps and tips on how to curb it';
         const prompt = initialSetup + transcript;
