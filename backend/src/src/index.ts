@@ -12,9 +12,8 @@ const port = 8080;
 const httpServer = http.createServer(app);
 
 dotenv.config();
-const apiKey = process.env.ELEVEN_LABS_API_KEY; // Your API key from Elevenlabs
-const voiceID = process.env.VOICE_ID; // The ID of the voice you want to get
-const fileName = 'audio.mp3'; // The name of your audio file
+const apiKey = process.env.ELEVEN_LABS_API_KEY;
+const voiceID = process.env.VOICE_ID;
 
 const configuration = new Configuration({
   apiKey: process.env.OPEN_AI_KEY,
@@ -50,6 +49,7 @@ io.on('connection', (socket: Socket) => {
   socket.on('audio-chunk', async (data: Buffer) => {
     console.log('audio chunk received');
     console.log('Pushing', data.length, 'to', socket.id);
+
     audioStreams[socket.id].chunks = [];
     audioStreams[socket.id].chunks.push(data);
     let completion;
@@ -66,10 +66,6 @@ io.on('connection', (socket: Socket) => {
         },
       });
 
-      console.log('RUNNNING', socket.id);
-      console.log('RUNNNING', socket.id);
-      console.log('RUNNNING', socket.id);
-
       if (response?.results && response.results.length > 0) {
         console.log(response.results, 'are the results');
         const transcription = response.results
@@ -83,9 +79,9 @@ io.on('connection', (socket: Socket) => {
           .join('\n');
         console.log(transcription, 'is the transcription');
 
-        const initalSetup =
+        const initialSetup =
           ' As an AI therapist or doctor or whatnot, engage with me in a conversation about my feelings and thoughts surrounding [insert issue or concern]. Ask me questions to better understand my situation and provide guidance on how to cope with or overcome this challenge. Introduce yourself as Helpr, the companion. Give them steps and tips on how to curb it';
-        const prompt = transcription;
+        const prompt = initialSetup + transcription;
 
         try {
           if (prompt == null) {

@@ -2,13 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import socket from './Socket/Socket';
 import helprLogo from 'assets/helpr-logo.png';
 
-import {
-  chakra,
-  Flex,
-  useColorModeValue,
-  Image,
-  Button,
-} from '@chakra-ui/react';
+import { Flex, useColorModeValue, Image, Button } from '@chakra-ui/react';
 import HelprLoading from 'components/Loading/HelprLoading';
 
 export const AudioRecorder = () => {
@@ -19,7 +13,8 @@ export const AudioRecorder = () => {
   );
   const [transcription, setTranscription] = useState<string>('');
   const [responseLoading, setResponseLoading] = useState<boolean>(false);
-  const [audioChunks, setAudioChunks] = useState([]);
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+
   const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isAudioStreamingComplete, setIsAudioStreamingComplete] =
@@ -28,11 +23,12 @@ export const AudioRecorder = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const audioSourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null); // Create a ref for the audio element
 
   useEffect(() => {
     // Set up the AudioContext when the component mounts
-    const audioContext = new (window.AudioContext ||
-      window.webkitAudioContext)();
+    const audioContext = new window.AudioContext();
     audioContextRef.current = audioContext;
 
     // Clean up the AudioContext when the component unmounts
@@ -45,6 +41,11 @@ export const AudioRecorder = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (audioStream && audioRef.current) {
+      audioRef.current.srcObject = audioStream;
+    }
+  }, [audioStream]);
   useEffect(() => {
     // Listen for audio chunks from the backend
     socket.on('audio-chunk', (audioChunk) => {
@@ -67,52 +68,50 @@ export const AudioRecorder = () => {
     };
   }, []);
 
-  const handleAudioStreamingComplete = () => {
-    // Your logic to handle the completion of audio streaming
-    console.log('Transcription process completed');
-    setIsAudioStreamingComplete(true);
-    socket.emit('audio-end'); // Signal that audio streaming has ended to the backend
-    playAudioChunks();
+  const stopAudio = () => {
+    console.log(audioSourceNodeRef.current);
+    if (audioSourceNodeRef.current && isPlaying) {
+      setIsPlaying(false);
+      audioSourceNodeRef.current.stop(); // Stop the audio playback
+    }
   };
-
-  const playAudioChunks = () => {
+  const playAudioChunks = async () => {
     const audioContext = audioContextRef.current;
 
-    // if (!audioContext || !audioBuffer || !audioChunks.length || isPlaying) {
-    //   console.log('Cannot play audio: invalid state or already playing.');
-    //   return;
-    // }
+    if (!audioContext || !audioBuffer || !audioChunks.length || isPlaying) {
+      console.log('Cannot play audio: invalid state or already playing.');
+      return;
+    }
 
     // Concatenate all received audio chunks into a single Blob
     const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
 
     // Read the Blob data into an ArrayBuffer
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const audioData = reader.result as ArrayBuffer;
+    const audioData = await audioBlob.arrayBuffer();
 
-      // Decode the ArrayBuffer into an AudioBuffer
-      try {
-        const audioBuffer = await audioContext.decodeAudioData(audioData);
-        setAudioBuffer(audioBuffer);
+    // Decode the ArrayBuffer into an AudioBuffer
+    try {
+      const audioBuffer = await audioContext.decodeAudioData(audioData);
+      setAudioBuffer(audioBuffer);
 
-        // Start playback
-        const audioSource = audioContext.createBufferSource();
-        audioSource.buffer = audioBuffer;
-        audioSource.connect(audioContext.destination);
-        audioSource.start();
-        setIsPlaying(true);
-
-        // Stop playback when the audio ends
-        audioSource.onended = () => {
-          setIsPlaying(false);
-        };
-      } catch (error) {
-        console.error('Error decoding audio data:', error);
+      // Stop the current audio source node if it exists
+      if (audioSourceNodeRef.current) {
+        audioSourceNodeRef.current.stop();
       }
-    };
 
-    reader.readAsArrayBuffer(audioBlob);
+      // Start playback
+      const audioSource = audioContext.createBufferSource();
+      audioSourceNodeRef.current = audioSource; // Update the audioSourceNodeRef with the new source node
+      audioSource.buffer = audioBuffer;
+      audioSource.connect(audioContext.destination);
+      audioSource.start(); // Start the audio playback
+      setIsPlaying(true); // Update the isPlaying state
+      audioSource.onended = () => {
+        setIsPlaying(false); // Reset isPlaying state when audio ends
+      };
+    } catch (error) {
+      console.error('Error decoding audio data:', error);
+    }
   };
 
   const startStopStreaming = () => {
@@ -216,6 +215,7 @@ export const AudioRecorder = () => {
       >
         <div>
           <audio ref={setAudioElement} autoPlay muted />
+
           <Button onClick={startStopStreaming} disabled={false}>
             {streaming ? 'Stop' : 'Talk'}
           </Button>
@@ -228,9 +228,10 @@ export const AudioRecorder = () => {
           >
             Play Audio
           </button>
-          {/* <button onClick={stopAudio} disabled={!isPlaying}>
+          <button onClick={stopAudio} disabled={!isPlaying}>
             Stop Audio
-          </button> */}
+          </button>
+
           {/* <button
           onClick={handleAudioStreamingComplete}
           disabled={isAudioStreamingComplete}

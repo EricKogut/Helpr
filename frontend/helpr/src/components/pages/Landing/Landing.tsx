@@ -14,8 +14,6 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react';
 
-import { AudioRecorder } from 'components/audio/AudioRecorder';
-
 export const Landing = () => {
   return (
     <Container maxW={'8xl'}>
