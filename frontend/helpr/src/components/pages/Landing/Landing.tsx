@@ -19,7 +19,6 @@ import { AudioRecorder } from 'components/audio/AudioRecorder';
 export const Landing = () => {
   return (
     <Container maxW={'8xl'}>
-      <AudioRecorder />
       <Stack
         align={'center'}
         spacing={{ base: 8, md: 10 }}

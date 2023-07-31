@@ -19,9 +19,101 @@ export const AudioRecorder = () => {
   );
   const [transcription, setTranscription] = useState<string>('');
   const [responseLoading, setResponseLoading] = useState<boolean>(false);
+  const [audioChunks, setAudioChunks] = useState([]);
+  const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isAudioStreamingComplete, setIsAudioStreamingComplete] =
+    useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Array<Blob>>([]);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const audioContextRef = useRef<AudioContext | null>(null);
+
+  useEffect(() => {
+    // Set up the AudioContext when the component mounts
+    const audioContext = new (window.AudioContext ||
+      window.webkitAudioContext)();
+    audioContextRef.current = audioContext;
+
+    // Clean up the AudioContext when the component unmounts
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch((error) => {
+          console.error('Error closing AudioContext:', error);
+        });
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    // Listen for audio chunks from the backend
+    socket.on('audio-chunk', (audioChunk) => {
+      setAudioChunks([]);
+
+      // Handle the audio chunk here
+      console.log('Received audio chunk:', audioChunk);
+      setAudioChunks((prevAudioChunks) => [...prevAudioChunks, audioChunk]);
+    });
+
+    // Listen for the "audio-end" event to signal the end of audio streaming
+    socket.on('audio-end', () => {
+      setIsAudioStreamingComplete(true);
+    });
+
+    // Clean up the socket listener when the component unmounts
+    return () => {
+      socket.off('audio-chunk');
+      socket.off('audio-end');
+    };
+  }, []);
+
+  const handleAudioStreamingComplete = () => {
+    // Your logic to handle the completion of audio streaming
+    console.log('Transcription process completed');
+    setIsAudioStreamingComplete(true);
+    socket.emit('audio-end'); // Signal that audio streaming has ended to the backend
+    playAudioChunks();
+  };
+
+  const playAudioChunks = () => {
+    const audioContext = audioContextRef.current;
+
+    // if (!audioContext || !audioBuffer || !audioChunks.length || isPlaying) {
+    //   console.log('Cannot play audio: invalid state or already playing.');
+    //   return;
+    // }
+
+    // Concatenate all received audio chunks into a single Blob
+    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+
+    // Read the Blob data into an ArrayBuffer
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const audioData = reader.result as ArrayBuffer;
+
+      // Decode the ArrayBuffer into an AudioBuffer
+      try {
+        const audioBuffer = await audioContext.decodeAudioData(audioData);
+        setAudioBuffer(audioBuffer);
+
+        // Start playback
+        const audioSource = audioContext.createBufferSource();
+        audioSource.buffer = audioBuffer;
+        audioSource.connect(audioContext.destination);
+        audioSource.start();
+        setIsPlaying(true);
+
+        // Stop playback when the audio ends
+        audioSource.onended = () => {
+          setIsPlaying(false);
+        };
+      } catch (error) {
+        console.error('Error decoding audio data:', error);
+      }
+    };
+
+    reader.readAsArrayBuffer(audioBlob);
+  };
 
   const startStopStreaming = () => {
     setStreaming((prevStreaming) => !prevStreaming);
@@ -108,48 +200,69 @@ export const AudioRecorder = () => {
   }, []);
 
   return (
-    <Flex
-      boxShadow={'lg'}
-      maxW={'640px'}
-      direction={{ base: 'column-reverse', md: 'row' }}
-      width={'full'}
-      rounded={'xl'}
-      p={10}
-      justifyContent={'space-between'}
-      position={'relative'}
-      bg={useColorModeValue('white', 'gray.800')}
-    >
-      <div>
-        {transcription}
-        <audio ref={setAudioElement} autoPlay muted />
-        <Button onClick={startStopStreaming} disabled={false}>
-          {streaming ? 'Stop' : 'Talk'}
-        </Button>
-      </div>
-      <Flex
-        direction={'column'}
-        textAlign={'left'}
-        justifyContent={'space-between'}
-      >
-        <chakra.p fontWeight={'medium'} fontSize={'15px'} pb={4}>
-          {'TEXT 1'}
-        </chakra.p>
+    <>
+      {transcription}
 
-        <chakra.p fontWeight={'bold'} fontSize={14}>
+      <Flex
+        boxShadow={'lg'}
+        maxW={'640px'}
+        direction={{ base: 'column-reverse', md: 'row' }}
+        width={'full'}
+        rounded={'xl'}
+        p={10}
+        justifyContent={'space-between'}
+        position={'relative'}
+        bg={useColorModeValue('white', 'gray.800')}
+      >
+        <div>
+          <audio ref={setAudioElement} autoPlay muted />
+          <Button onClick={startStopStreaming} disabled={false}>
+            {streaming ? 'Stop' : 'Talk'}
+          </Button>
+        </div>
+        <div>
+          {/* JSX of your component */}
+          <button
+            onClick={playAudioChunks}
+            disabled={!isAudioStreamingComplete}
+          >
+            Play Audio
+          </button>
+          {/* <button onClick={stopAudio} disabled={!isPlaying}>
+            Stop Audio
+          </button> */}
+          {/* <button
+          onClick={handleAudioStreamingComplete}
+          disabled={isAudioStreamingComplete}
+        >
+          Finish Streaming
+        </button> */}
+        </div>
+        <Flex
+          direction={'column'}
+          textAlign={'left'}
+          justifyContent={'space-between'}
+        >
+          {/* <chakra.p fontWeight={'medium'} fontSize={'15px'} pb={4}>
+          {'TEXT 1'}
+        </chakra.p> */}
+
+          {/* <chakra.p fontWeight={'bold'} fontSize={14}>
           {'TEXT 2'}
 
           <chakra.span fontWeight={'medium'} color={'gray.500'}>
             {' '}
             {'TEXT 3'}
           </chakra.span>
-        </chakra.p>
+        </chakra.p> */}
+        </Flex>
+        {responseLoading ? (
+          <HelprLoading />
+        ) : (
+          <Image src={helprLogo.src} alt='helpr-logo' width={20} />
+        )}
       </Flex>
-      {responseLoading ? (
-        <HelprLoading />
-      ) : (
-        <Image src={helprLogo.src} alt='helpr-logo' width={20} />
-      )}
-    </Flex>
+    </>
   );
 };
 export default AudioRecorder;

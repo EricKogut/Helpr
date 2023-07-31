@@ -58,3 +58,4 @@ amplifytools.xcconfig
 #amplify-do-not-edit-end
 backend/src/serviceAccount.json
 backend/src/audio.wav
+backend/src/.env
