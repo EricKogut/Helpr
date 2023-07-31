@@ -36,7 +36,7 @@ export const AudioRecorder = () => {
     return () => {
       socket.disconnect();
     };
-  },[]);
+  }, []);
 
   useEffect(() => {
     // Set up the AudioContext when the component mounts
@@ -58,6 +58,7 @@ export const AudioRecorder = () => {
       audioRef.current.srcObject = audioStream;
     }
   }, [audioStream]);
+
   useEffect(() => {
     // Listen for audio chunks from the backend
     socket.on('audio-chunk', (audioChunk) => {
@@ -80,6 +81,13 @@ export const AudioRecorder = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (isAudioStreamingComplete) {
+      playAudioChunks();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAudioStreamingComplete]);
+
   const stopAudio = () => {
     console.log(audioSourceNodeRef.current);
     if (audioSourceNodeRef.current && isPlaying) {
@@ -88,9 +96,10 @@ export const AudioRecorder = () => {
     }
   };
   const playAudioChunks = async () => {
+    console.log('this is called');
     const audioContext = audioContextRef.current;
 
-    if (!audioContext || !audioBuffer || !audioChunks.length || isPlaying) {
+    if (!audioContext) {
       console.log('Cannot play audio: invalid state or already playing.');
       return;
     }
@@ -233,7 +242,6 @@ export const AudioRecorder = () => {
           </Button>
         </div>
         <div>
-          {/* JSX of your component */}
           <button
             onClick={playAudioChunks}
             disabled={!isAudioStreamingComplete}
@@ -243,32 +251,12 @@ export const AudioRecorder = () => {
           <button onClick={stopAudio} disabled={!isPlaying}>
             Stop Audio
           </button>
-
-          {/* <button
-          onClick={handleAudioStreamingComplete}
-          disabled={isAudioStreamingComplete}
-        >
-          Finish Streaming
-        </button> */}
         </div>
         <Flex
           direction={'column'}
           textAlign={'left'}
           justifyContent={'space-between'}
-        >
-          {/* <chakra.p fontWeight={'medium'} fontSize={'15px'} pb={4}>
-          {'TEXT 1'}
-        </chakra.p> */}
-
-          {/* <chakra.p fontWeight={'bold'} fontSize={14}>
-          {'TEXT 2'}
-
-          <chakra.span fontWeight={'medium'} color={'gray.500'}>
-            {' '}
-            {'TEXT 3'}
-          </chakra.span>
-        </chakra.p> */}
-        </Flex>
+        ></Flex>
         {responseLoading ? (
           <HelprLoading />
         ) : (
