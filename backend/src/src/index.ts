@@ -19,7 +19,11 @@ app.use(cors());
 
 const audioStreams: {
   [key: string]: {
-    clientData: string[] | [];
+    clientData: {
+      conversationType: string;
+      voice: string;
+      previousChat: string;
+    };
     chunks: Buffer[];
     ttsInProgress: boolean;
   };
@@ -36,7 +40,7 @@ io.on('connection', (socket) => {
   console.log('New connection');
   console.log(socket.id);
   audioStreams[socket.id] = {
-    clientData: [],
+    clientData: {voice:"", conversationType:"", previousChat:""},
     chunks: [],
     ttsInProgress: false,
   };
@@ -77,9 +81,9 @@ io.on('connection', (socket) => {
         ]);
 
         console.log(classificationScore);
-        const initialSetup =
-          ' As an AI therapist or doctor or whatnot, engage with me in a conversation about my feelings and thoughts surrounding [insert issue or concern]. Ask me questions to better understand my situation and provide guidance on how to cope with or overcome this challenge. Introduce yourself as Helpr, the companion. Give them steps and tips on how to curb it';
-        const prompt = initialSetup + transcript;
+        const initialSetup = "You are a interactive AI caled helper And you help users solve their issues. Introduce yourself if need be"
+        const userSetup = audioStreams[socket.id].clientData.conversationType
+        const prompt = initialSetup + userSetup + transcript; 
 
         try {
           const completion = await generateChatResponse(prompt);

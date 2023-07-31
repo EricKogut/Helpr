@@ -21,12 +21,11 @@ export const AudioRecorder = ({voice, conversationType}:Props) => {
   const [responseLoading, setResponseLoading] = useState<boolean>(false);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
 
-  const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isAudioStreamingComplete, setIsAudioStreamingComplete] =
     useState(false);
 
-  const [initialData, setInitialData] = useState(['this is the initial data']);
+  const [initialData, setInitialData] = useState({voice:voice, conversationType:conversationType});
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -120,7 +119,6 @@ export const AudioRecorder = ({voice, conversationType}:Props) => {
     // Decode the ArrayBuffer into an AudioBuffer
     try {
       const audioBuffer = await audioContext.decodeAudioData(audioData);
-      setAudioBuffer(audioBuffer);
 
       // Stop the current audio source node if it exists
       if (audioSourceNodeRef.current) {
