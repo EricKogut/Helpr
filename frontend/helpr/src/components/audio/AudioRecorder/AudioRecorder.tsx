@@ -82,11 +82,12 @@ export const AudioRecorder = () => {
   }, []);
 
   useEffect(() => {
+    console.log('SHOULD i CALL IT ');
     if (isAudioStreamingComplete) {
       playAudioChunks();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAudioStreamingComplete]);
+  }, [isAudioStreamingComplete, audioChunks]);
 
   const stopAudio = () => {
     console.log(audioSourceNodeRef.current);
