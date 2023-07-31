@@ -20,11 +20,23 @@ export const AudioRecorder = () => {
   const [isAudioStreamingComplete, setIsAudioStreamingComplete] =
     useState(false);
 
+  const [initialData, setInitialData] = useState(['this is the initial data']);
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioSourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null); // Create a ref for the audio element
+
+  useEffect(() => {
+    // Send initialData to the backend as soon as the client is connected
+    socket.emit('client-connected', initialData);
+
+    // Clean up the socket connection when the component unmounts
+    return () => {
+      socket.disconnect();
+    };
+  },[]);
 
   useEffect(() => {
     // Set up the AudioContext when the component mounts

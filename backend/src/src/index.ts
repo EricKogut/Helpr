@@ -18,7 +18,7 @@ app.use(cors());
 
 const audioStreams: {
   [key: string]: {
-    initialData: string[] | [];
+    clientData: string[] | [];
     chunks: Buffer[];
     ttsInProgress: boolean;
   };
@@ -35,10 +35,20 @@ io.on('connection', (socket) => {
   console.log('New connection');
   console.log(socket.id);
   audioStreams[socket.id] = {
-    initialData: [],
+    clientData: [],
     chunks: [],
     ttsInProgress: false,
   };
+
+  socket.on('client-connected', (clientData) => {
+    console.log('Initial data received from client:', clientData);
+    // Store the initial data in the audioStreams object using socket.id as the key
+    audioStreams[socket.id] = {
+      clientData,
+      chunks: [],
+      ttsInProgress: false,
+    };
+  });
 
   socket.on('audio-chunk', async (data) => {
     console.log('audio chunk received');
