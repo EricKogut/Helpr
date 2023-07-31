@@ -5,7 +5,13 @@ import helprLogo from 'assets/helpr-logo.png';
 import { Flex, useColorModeValue, Image, Button } from '@chakra-ui/react';
 import HelprLoading from 'components/Loading/HelprLoading';
 
-export const AudioRecorder = () => {
+interface Props {
+  voice: string;
+  conversationType?: string;
+}
+// Also plz don't judge this too hard LOL, I was going to cleean it up
+export const AudioRecorder = ({voice, conversationType}:Props) => {
+  console.log(voice, "is the voice", conversationType, "is the conversationType")
   const [streaming, setStreaming] = useState<boolean>(false);
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(

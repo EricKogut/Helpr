@@ -1,10 +1,28 @@
-import { Box, chakra, Flex, useColorModeValue } from '@chakra-ui/react';
+import { useState } from 'react';
+
+import { Box, chakra, Flex } from '@chakra-ui/react';
 import { AudioRecorder } from 'components/audio/AudioRecorder';
+import Onboarding from 'components/audio/AudioRecorder/components/Onboarding';
 import React from 'react';
 
 export const Chat = () => {
+
+  //PLEASE NOTE: very meh code <3
+  const [onboardingStep, setOnboardingStep] = useState(0);
+  const [conversationType, setConversationType] = useState('');
+  const [voice, setVoice] = useState('')
+console.log(onboardingStep)
+  if (onboardingStep <= 3){
+    return <Onboarding onboardingStep={onboardingStep}
+    setOnboardingStep={setOnboardingStep}
+    conversationType={conversationType}
+    setConversationType={setConversationType}
+    voice={voice}
+    setVoice={setVoice} />
+  }
   return (
     <>
+      
       <Flex
         textAlign={'center'}
         pt={10}
@@ -25,7 +43,7 @@ export const Chat = () => {
             py={5}
             fontSize={48}
             fontWeight={'bold'}
-            color={useColorModeValue('gray.700', 'gray.50')}
+           
           >
             Get Started
           </chakra.h1>
@@ -33,15 +51,14 @@ export const Chat = () => {
             margin={'auto'}
             width={'70%'}
             fontWeight={'medium'}
-            color={useColorModeValue('gray.500', 'gray.400')}
           >
             Click the microphone to get started{' '}
-            <chakra.strong color={useColorModeValue('gray.700', 'gray.50')}>
+            <chakra.strong >
               now
             </chakra.strong>{' '}
             with helpr health.
           </chakra.h2>
-          <AudioRecorder />
+          <AudioRecorder conversationType={conversationType} voice={voice} />
         </Box>
       </Flex>
     </>
