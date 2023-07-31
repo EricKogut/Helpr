@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import socket from './Socket/Socket';
+import socket from './components/Socket/Socket';
 import helprLogo from 'assets/helpr-logo.png';
 
 import { Flex, useColorModeValue, Image, Button } from '@chakra-ui/react';

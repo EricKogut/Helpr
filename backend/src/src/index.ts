@@ -1,27 +1,28 @@
+// app.js
 import express from 'express';
 import http from 'http';
-import { Server, Socket } from 'socket.io';
-import { SpeechClient } from '@google-cloud/speech';
+import { Server } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import axios from 'axios';
-import { Configuration, OpenAIApi } from 'openai';
+dotenv.config();
+import { transcribeAudio } from './modules/GoogleCloud';
+import { generateChatResponse } from './modules/ChatGPT';
+import { textToSpeech } from './modules/ElevenLabs';
 
 const app = express();
 const port = 8080;
 const httpServer = http.createServer(app);
-
 dotenv.config();
-const apiKey = process.env.ELEVEN_LABS_API_KEY;
-const voiceID = process.env.VOICE_ID;
 
-const configuration = new Configuration({
-  apiKey: process.env.OPEN_AI_KEY,
-});
-const openai = new OpenAIApi(configuration);
 app.use(cors());
 
-// TODO: replace this with the firebaseURL
+const audioStreams: {
+  [key: string]: {
+    initialData: string[] | [];
+    chunks: Buffer[];
+    ttsInProgress: boolean;
+  };
+} = {};
 const io = new Server(httpServer, {
   cors: {
     origin: '*',
@@ -30,45 +31,28 @@ const io = new Server(httpServer, {
   },
 });
 
-const speechClient = new SpeechClient({
-  keyFilename: './serviceAccount.json',
-});
-
-const audioStreams: {
-  [key: string]: { chunks: Buffer[]; ttsInProgress: boolean };
-} = {};
-
-io.on('connection', (socket: Socket) => {
+io.on('connection', (socket) => {
   console.log('New connection');
   console.log(socket.id);
   audioStreams[socket.id] = {
+    initialData: [],
     chunks: [],
     ttsInProgress: false,
   };
 
-  socket.on('audio-chunk', async (data: Buffer) => {
+  socket.on('audio-chunk', async (data) => {
     console.log('audio chunk received');
     console.log('Pushing', data.length, 'to', socket.id);
 
-    audioStreams[socket.id].chunks = [];
     audioStreams[socket.id].chunks.push(data);
-    let completion;
     try {
-      const audioBuffer = Buffer.concat(audioStreams[socket.id].chunks);
-      const [response] = await speechClient.recognize({
-        config: {
-          encoding: 0,
-          sampleRateHertz: 48000,
-          languageCode: 'en-US',
-        },
-        audio: {
-          content: audioBuffer,
-        },
-      });
+      const transcription = await transcribeAudio(
+        audioStreams[socket.id].chunks
+      );
 
-      if (response?.results && response.results.length > 0) {
-        console.log(response.results, 'are the results');
-        const transcription = response.results
+      if (transcription.length > 0) {
+        console.log(transcription, 'are the results');
+        const transcript = transcription
           .filter(
             (result) => result.alternatives && result.alternatives.length > 0
           )
@@ -77,69 +61,27 @@ io.on('connection', (socket: Socket) => {
               (result.alternatives && result.alternatives[0].transcript) || ''
           )
           .join('\n');
-        console.log(transcription, 'is the transcription');
 
         const initialSetup =
           ' As an AI therapist or doctor or whatnot, engage with me in a conversation about my feelings and thoughts surrounding [insert issue or concern]. Ask me questions to better understand my situation and provide guidance on how to cope with or overcome this challenge. Introduce yourself as Helpr, the companion. Give them steps and tips on how to curb it';
-        const prompt = initialSetup + transcription;
+        const prompt = initialSetup + transcript;
 
         try {
-          if (prompt == null) {
-            throw new Error('Uh oh, no prompt was provided');
-          }
-          const response = await openai.createCompletion({
-            model: 'text-davinci-003',
-            prompt,
-            max_tokens: 1000,
-          });
-          // retrieve the completion text from response
-          completion = response.data.choices[0].text;
-          // ...
-        } catch (error) {
-          console.log(error);
-        }
+          const completion = await generateChatResponse(prompt);
 
-        try {
-          const textToSpeechURL = `https://api.elevenlabs.io/v1/text-to-speech/${voiceID}`;
-          const ttsRequestData = {
-            text: completion,
-            model_id: 'eleven_monolingual_v1',
-            voice_settings: {
-              stability: 0.1,
-              similarity_boost: 0.2,
-            },
-          };
-
-          const ttsResponse = await axios.post(
-            textToSpeechURL,
-            ttsRequestData,
-            {
-              headers: {
-                accept: 'audio/mpeg',
-                'xi-api-key': apiKey,
-                'Content-Type': 'application/json',
-              },
-              responseType: 'arraybuffer', // Tell Axios to handle the response as an ArrayBuffer
-            }
-          );
-
-          if (ttsResponse && ttsResponse.data) {
-            // Convert the ArrayBuffer to a Buffer
-            const audioBuffer = Buffer.from(ttsResponse.data);
+          try {
+            const audioBuffer = await textToSpeech(completion);
             console.log(audioBuffer.length, 'is the audio buffer');
-            // Send the audio buffer back to the frontend via the socket
             socket.emit('audio-chunk', audioBuffer);
-            // Send the transcription back to the frontend
             socket.emit('transcription', completion);
             console.log('Transcription process completed');
-            socket.emit('audio-end'); // Signal that audio streaming has ended
-          } else {
-            console.error('Error: Invalid response format');
+            socket.emit('audio-end');
+          } catch (error) {
+            console.error('Error generating text-to-speech:', error);
             socket.emit('transcription', 'Error generating text-to-speech');
           }
         } catch (error) {
-          console.error('Error generating text-to-speech:', error);
-          socket.emit('transcription', 'Error generating text-to-speech');
+          console.log(error);
         }
       } else {
         socket.emit('transcription', 'No transcription available');
