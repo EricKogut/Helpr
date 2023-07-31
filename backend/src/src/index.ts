@@ -89,7 +89,7 @@ io.on('connection', (socket) => {
           const completion = await generateChatResponse(prompt);
 
           try {
-            const audioBuffer = await textToSpeech(completion);
+            const audioBuffer = await textToSpeech('yo mr. w', audioStreams[socket.id].clientData.voice);
             console.log(audioBuffer.length, 'is the audio buffer');
             socket.emit('audio-chunk', audioBuffer);
             socket.emit('transcription', completion);

@@ -2,9 +2,11 @@
 import axios from 'axios';
 
 const apiKey = process.env.ELEVEN_LABS_API_KEY;
-const voiceID = process.env.VOICE_ID;
+const voiceIDMale = process.env.VOICE_ID_MALE;
+const voiceIDFemale= process.env.VOICE_ID_FEMALE;
 
-export const textToSpeech = async (text: string) => {
+export const textToSpeech = async (text: string, voiceType:string) => {
+  const voiceID = voiceType === "male" ? voiceIDMale : voiceIDFemale;
   const textToSpeechURL = `https://api.elevenlabs.io/v1/text-to-speech/${voiceID}`;
   const ttsRequestData = {
     text,
