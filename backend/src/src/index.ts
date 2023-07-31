@@ -40,7 +40,7 @@ io.on('connection', (socket) => {
   console.log('New connection');
   console.log(socket.id);
   audioStreams[socket.id] = {
-    clientData: {voice:"", conversationType:"", previousChat:[""]},
+    clientData: { voice: '', conversationType: '', previousChat: [''] },
     chunks: [],
     ttsInProgress: false,
   };
@@ -49,7 +49,7 @@ io.on('connection', (socket) => {
     console.log('Initial data received from client:', clientData);
     // Store the initial data in the audioStreams object using socket.id as the key
     audioStreams[socket.id] = {
-      clientData:{...clientData, previousChat:['']},
+      clientData: { ...clientData, previousChat: [''] },
       chunks: [],
       ttsInProgress: false,
     };
@@ -78,36 +78,41 @@ io.on('connection', (socket) => {
           )
           .join('\n');
 
-        audioStreams[socket.id].clientData.previousChat.push(transcript)
+        audioStreams[socket.id].clientData.previousChat.push(
+          transcript.slice(1)
+        );
 
         const classificationScore = await classifyMentalHealthInputs([
           transcript,
         ]);
 
-
         console.log(classificationScore);
-        const initialSetup = "You are a interactive AI caled helper And you help users solve their issues. Introduce yourself if need be. "
-        const userSetup = audioStreams[socket.id].clientData.conversationType
-        const previousChats = audioStreams[socket.id].clientData.previousChat.join(" ")
+        const initialSetup =
+          'You are a interactive AI caled "Helpr" And you help users solve their issues. Introduce yourself if need be. ';
+        const userSetup = audioStreams[socket.id].clientData.conversationType;
+        const previousChats =
+          audioStreams[socket.id].clientData.previousChat.join(' ');
         const prompt =
-        initialSetup +
-        userSetup +
-        transcript +
-        "Your response may not have to do with anything I do here. Here is what we talked about before: " +
-        "here is what you previously talked about, continue the conversation from this point. " +
-        "Don't repeat what you said before but mention things I have brought up. " +
-        "If I ask a question about you, remember to use this info. " +
-        "If I forget something, mention something from here: " +
-        previousChats;
+          initialSetup +
+          userSetup +
+          transcript +
+          'Your response may not have to do with anything I do here. Here is what we talked about before: ' +
+          'here is what you previously talked about, continue the conversation from this point. ' +
+          "Don't repeat what you said before but mention things I have brought up. " +
+          'If I ask a question about you, remember to use this info. ' +
+          'If I forget something, mention something from here: ' +
+          previousChats;
 
+        console.log(prompt);
 
-        console.log(prompt)
-        
         try {
           const completion = await generateChatResponse(prompt);
-          console.log(completion)
+          console.log(completion);
           try {
-            const audioBuffer = await textToSpeech('yoooooooo mr. white', audioStreams[socket.id].clientData.voice);
+            const audioBuffer = await textToSpeech(
+              completion,
+              audioStreams[socket.id].clientData.voice
+            );
             console.log(audioBuffer.length, 'is the audio buffer');
             socket.emit('audio-chunk', audioBuffer);
             socket.emit('transcription', completion);

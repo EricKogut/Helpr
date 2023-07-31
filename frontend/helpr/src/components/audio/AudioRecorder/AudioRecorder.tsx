@@ -1,17 +1,28 @@
 import React, { useState, useEffect, useRef } from 'react';
 import socket from './components/Socket/Socket';
-import helprLogo from 'assets/helpr-logo.png';
+import { SmallCloseIcon, PhoneIcon, SpinnerIcon } from '@chakra-ui/icons';
 
-import { Flex, useColorModeValue, Image, Button } from '@chakra-ui/react';
+import {
+  Flex,
+  useColorModeValue,
+  Button,
+  Box,
+} from '@chakra-ui/react';
 import HelprLoading from 'components/Loading/HelprLoading';
+import { Messages } from './components/Messages/Messages';
 
 interface Props {
   voice: string;
   conversationType?: string;
 }
 // Also plz don't judge this too hard LOL, I was going to cleean it up
-export const AudioRecorder = ({voice, conversationType}:Props) => {
-  console.log(voice, "is the voice", conversationType, "is the conversationType")
+export const AudioRecorder = ({ voice, conversationType }: Props) => {
+  console.log(
+    voice,
+    'is the voice',
+    conversationType,
+    'is the conversationType'
+  );
   const [streaming, setStreaming] = useState<boolean>(false);
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(
@@ -25,7 +36,11 @@ export const AudioRecorder = ({voice, conversationType}:Props) => {
   const [isAudioStreamingComplete, setIsAudioStreamingComplete] =
     useState(false);
 
-  const [initialData, setInitialData] = useState({voice:voice, conversationType:conversationType});
+  const [initialData, setInitialData] = useState({
+    voice: voice,
+    conversationType: conversationType,
+  });
+  const [allMessages, setAllMessages] = useState<string[]>([]);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -87,7 +102,6 @@ export const AudioRecorder = ({voice, conversationType}:Props) => {
   }, []);
 
   useEffect(() => {
-    console.log('SHOULD i CALL IT ');
     if (isAudioStreamingComplete) {
       playAudioChunks();
     }
@@ -188,6 +202,11 @@ export const AudioRecorder = ({voice, conversationType}:Props) => {
 
   useEffect(() => {
     socket.on('transcription', (transcription) => {
+      setAllMessages((previousMessages) => [
+        ...previousMessages,
+        transcription,
+      ]);
+
       setTranscription(transcription);
       setResponseLoading(false);
       console.log('Transcription:', transcription);
@@ -226,48 +245,51 @@ export const AudioRecorder = ({voice, conversationType}:Props) => {
 
   return (
     <>
-      {transcription}
+      <Box width={{ base: 'full', sm: 'lg', lg: 'xl' }} margin={'auto'}>
+        <Messages allMessages={allMessages} />
+        <audio ref={setAudioElement} autoPlay muted />
 
-      <Flex
-        boxShadow={'lg'}
-        maxW={'640px'}
-        direction={{ base: 'column-reverse', md: 'row' }}
-        width={'full'}
-        rounded={'xl'}
-        p={10}
-        justifyContent={'space-between'}
-        position={'relative'}
-        bg={useColorModeValue('white', 'gray.800')}
-      >
-        <div>
-          <audio ref={setAudioElement} autoPlay muted />
-
-          <Button onClick={startStopStreaming} disabled={false}>
-            {streaming ? 'Stop' : 'Talk'}
-          </Button>
-        </div>
-        <div>
-          <button
-            onClick={playAudioChunks}
-            disabled={!isAudioStreamingComplete}
-          >
-            Play Audio
-          </button>
-          <button onClick={stopAudio} disabled={!isPlaying}>
-            Stop Audio
-          </button>
-        </div>
         <Flex
-          direction={'column'}
-          textAlign={'left'}
+          boxShadow={'lg'}
+          maxW={'640px'}
+          direction={{ base: 'column-reverse', md: 'row' }}
+          width={'full'}
+          rounded={'xl'}
+          p={10}
           justifyContent={'space-between'}
-        ></Flex>
-        {responseLoading ? (
-          <HelprLoading />
-        ) : (
-          <Image src={helprLogo.src} alt='helpr-logo' width={20} />
-        )}
-      </Flex>
+          position={'relative'}
+          bg={useColorModeValue('white', 'gray.800')}
+        >
+          {!responseLoading ? (
+            <>
+              <Button
+                onClick={startStopStreaming}
+                disabled={false}
+                leftIcon={<PhoneIcon />}
+              >
+                {streaming ? 'End' : 'Begin'}
+              </Button>
+
+              <Button
+                onClick={playAudioChunks}
+                disabled={!isAudioStreamingComplete}
+                leftIcon={<SpinnerIcon />}
+              >
+                Play Audio
+              </Button>
+              <Button
+                onClick={stopAudio}
+                disabled={!isPlaying}
+                leftIcon={<SmallCloseIcon />}
+              >
+                Stop Audio
+              </Button>
+            </>
+          ) : (
+            <HelprLoading />
+          )}
+        </Flex>
+      </Box>
     </>
   );
 };
