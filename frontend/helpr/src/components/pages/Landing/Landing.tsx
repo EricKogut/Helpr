@@ -73,7 +73,7 @@ export const Landing = () => {
               </Button>
             </Link>
             <a
-              href='https://www.loom.com/share/7d0acc8b204348e79c777368be4c142c?sid=6132ab22-cb3c-470e-baa0-95d6872ff214'
+              href='https://www.loom.com/share/eb197975ebcd4e8784c769d92cb02936?sid=26cc2d59-aebc-4e4d-b3be-d3bea210db76'
               target='_blank'
               rel='noopener noreferrer'
             >
@@ -123,7 +123,7 @@ export const Landing = () => {
             }}
           >
             <iframe
-              src='https://www.loom.com/embed/7d0acc8b204348e79c777368be4c142c?sid=8f99775d-22d8-4085-a235-5fef0f8bd649'
+              src='https://www.loom.com/embed/eb197975ebcd4e8784c769d92cb02936?sid=29218aa5-f49c-479d-b72f-72211b557dc5'
               allowFullScreen
             ></iframe>
           </div>
