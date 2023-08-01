@@ -143,7 +143,7 @@ io.on('connection', (socket) => {
           console.log(completion);
           try {
             const audioBuffer = await textToSpeech(
-              'yeet',
+              completion,
               audioStreams[socket.id].clientData.voice
             );
             console.log(audioBuffer.length, 'is the audio buffer');
