@@ -122,10 +122,7 @@ export const Landing = () => {
           >
             <iframe
               src='https://www.loom.com/embed/7d0acc8b204348e79c777368be4c142c?sid=8f99775d-22d8-4085-a235-5fef0f8bd649'
-              frameborder='0'
-              webkitallowfullscreen
-              mozallowfullscreen
-              allowfullscreen
+              allowFullScreen
             ></iframe>
           </div>
         </Box>
