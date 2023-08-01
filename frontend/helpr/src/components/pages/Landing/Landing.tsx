@@ -1,18 +1,18 @@
 import {
   Container,
   Stack,
-  Flex,
   Box,
   Heading,
   Text,
   Button,
-  Image,
   Icon,
   IconButton,
   createIcon,
   IconProps,
   useColorModeValue,
 } from '@chakra-ui/react';
+
+import Link from 'next/link';
 
 export const Landing = () => {
   return (
@@ -59,17 +59,19 @@ export const Landing = () => {
             spacing={{ base: 4, sm: 6 }}
             direction={{ base: 'column', sm: 'row' }}
           >
-            <Button
-              rounded={'full'}
-              size={'lg'}
-              fontWeight={'normal'}
-              px={6}
-              colorScheme={'red'}
-              bg={'red.400'}
-              _hover={{ bg: 'red.500' }}
-            >
-              Get started
-            </Button>
+            <Link href='/helpr'>
+              <Button
+                rounded={'full'}
+                size={'lg'}
+                fontWeight={'normal'}
+                px={6}
+                colorScheme={'red'}
+                bg={'red.400'}
+                _hover={{ bg: 'red.500' }}
+              >
+                Get started
+              </Button>
+            </Link>
             <a
               href='https://www.loom.com/share/7d0acc8b204348e79c777368be4c142c?sid=6132ab22-cb3c-470e-baa0-95d6872ff214'
               target='_blank'
