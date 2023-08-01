@@ -17,6 +17,30 @@ dotenv.config();
 
 app.use(cors());
 
+type SentimentConfidences = {
+  negative: { confidence: number };
+  neutral: { confidence: number };
+  positive: { confidence: number };
+};
+
+const calculateWeightedSentiment = (
+  confidences: SentimentConfidences
+): number => {
+  // Apply positive and negative weights to the sentiments
+  const weightedNegative = confidences.negative.confidence * 0.1; // You can adjust the weight for negative sentiment here
+  const weightedNeutral = confidences.neutral.confidence * 0.2; // You can adjust the weight for neutral sentiment here
+  const weightedPositive = confidences.positive.confidence * 0.7; // You can adjust the weight for positive sentiment here
+
+  // Calculate the total weighted sentiment score
+  const totalWeightedScore =
+    weightedNegative + weightedNeutral + weightedPositive;
+
+  // Map the total weighted score to a range of 0 to 100
+  const sentimentScore = Math.round(totalWeightedScore * 100);
+
+  // Ensure the sentiment score is within the valid range (0 to 100)
+  return Math.min(Math.max(sentimentScore, 0), 100);
+};
 const audioStreams: {
   [key: string]: {
     clientData: {
@@ -86,36 +110,47 @@ io.on('connection', (socket) => {
           transcript,
         ]);
 
-        console.log(classificationScore);
+        console.log(classificationScore, 'is the score');
+
+        const sentimentScore: number = calculateWeightedSentiment(
+          classificationScore[0] as SentimentConfidences
+        );
+
+        console.log(sentimentScore, 'is the score');
         const initialSetup =
-          'You are a interactive AI caled "Helpr" And you help users solve their issues. Introduce yourself if need be. ';
+          'You are a interactive AI caled "Helpr" And you help users solve their issues. Introduce youself if need be. Mention the sentiment score only if they ask about it';
         const userSetup = audioStreams[socket.id].clientData.conversationType;
         const previousChats =
           audioStreams[socket.id].clientData.previousChat.join(' ');
         const prompt =
           initialSetup +
+          ' the current senitment score is' +
+          sentimentScore.toString() +
+          ' ' +
           userSetup +
           transcript +
           'Your response may not have to do with anything I do here. Here is what we talked about before: ' +
           'here is what you previously talked about, continue the conversation from this point. ' +
           "Don't repeat what you said before but mention things I have brought up. " +
           'If I ask a question about you, remember to use this info. ' +
-          'If I forget something, mention something from here: ' +
+          'If I forget something, mention something from here. : ' +
           previousChats;
 
-        console.log(prompt);
+        console.log(prompt, 'is the prompt');
 
         try {
           const completion = await generateChatResponse(prompt);
           console.log(completion);
           try {
             const audioBuffer = await textToSpeech(
-              completion,
+              'yeet',
               audioStreams[socket.id].clientData.voice
             );
             console.log(audioBuffer.length, 'is the audio buffer');
             socket.emit('audio-chunk', audioBuffer);
             socket.emit('transcription', completion);
+            socket.emit('classificationScore', sentimentScore);
+
             console.log('Transcription process completed');
             socket.emit('audio-end');
           } catch (error) {

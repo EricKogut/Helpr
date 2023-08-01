@@ -7,6 +7,8 @@ import {
   useColorModeValue,
   Button,
   Box,
+  chakra,
+  Progress,
 } from '@chakra-ui/react';
 import HelprLoading from 'components/Loading/HelprLoading';
 import { Messages } from './components/Messages/Messages';
@@ -16,19 +18,15 @@ interface Props {
   conversationType?: string;
 }
 // Also plz don't judge this too hard LOL, I was going to cleean it up
-export const AudioRecorder = ({ voice, conversationType }: Props) => {
-  console.log(
-    voice,
-    'is the voice',
-    conversationType,
-    'is the conversationType'
-  );
+export const AudioRecorder = ({
+  voice = 'femaile',
+  conversationType = 'casual',
+}: Props) => {
   const [streaming, setStreaming] = useState<boolean>(false);
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(
     null
   );
-  const [transcription, setTranscription] = useState<string>('');
   const [responseLoading, setResponseLoading] = useState<boolean>(false);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
 
@@ -36,10 +34,12 @@ export const AudioRecorder = ({ voice, conversationType }: Props) => {
   const [isAudioStreamingComplete, setIsAudioStreamingComplete] =
     useState(false);
 
-  const [initialData, setInitialData] = useState({
+  const [currentScore, setCurrentScore] = useState(0);
+
+  const initialData = {
     voice: voice,
     conversationType: conversationType,
-  });
+  };
   const [allMessages, setAllMessages] = useState<string[]>([]);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -207,7 +207,6 @@ export const AudioRecorder = ({ voice, conversationType }: Props) => {
         transcription,
       ]);
 
-      setTranscription(transcription);
       setResponseLoading(false);
       console.log('Transcription:', transcription);
     });
@@ -217,6 +216,18 @@ export const AudioRecorder = ({ voice, conversationType }: Props) => {
       if (mediaRecorderRef.current) {
         mediaRecorderRef.current.stop();
       }
+    };
+  }, []);
+
+  useEffect(() => {
+    socket.on('classificationScore', (classificationScore) => {
+      setCurrentScore(classificationScore);
+
+      console.log('classificationScore:', classificationScore);
+    });
+
+    return () => {
+      socket.off('classificationScore');
     };
   }, []);
 
@@ -246,7 +257,34 @@ export const AudioRecorder = ({ voice, conversationType }: Props) => {
   return (
     <>
       <Box width={{ base: 'full', sm: 'lg', lg: 'xl' }} margin={'auto'}>
+        {allMessages.length == 0 && (
+          <>
+            <chakra.h3
+              fontWeight={'bold'}
+              fontSize={20}
+              textTransform={'uppercase'}
+            >
+              Helpr Health
+            </chakra.h3>
+            <chakra.h1 py={5} fontSize={48} fontWeight={'bold'}>
+              Get Started
+            </chakra.h1>
+            <chakra.h2 margin={'auto'} width={'70%'} fontWeight={'medium'}>
+              Click the microphone to get started{' '}
+              <chakra.strong>now</chakra.strong> with helpr health. Our goal is
+              to get your happiness meter up, but don&apos;t worry if it
+              fluctuates.
+            </chakra.h2>
+          </>
+        )}
         <Messages allMessages={allMessages} />
+        <Progress
+          colorScheme='red'
+          height='32px'
+          value={currentScore}
+          isIndeterminate={responseLoading}
+        />
+
         <audio ref={setAudioElement} autoPlay muted />
 
         <Flex

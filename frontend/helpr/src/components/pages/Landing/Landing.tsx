@@ -70,65 +70,65 @@ export const Landing = () => {
             >
               Get started
             </Button>
-            <Button
-              rounded={'full'}
-              size={'lg'}
-              fontWeight={'normal'}
-              px={6}
-              leftIcon={<PlayIcon h={4} w={4} color={'gray.300'} />}
+            <a
+              href='https://www.loom.com/share/7d0acc8b204348e79c777368be4c142c?sid=6132ab22-cb3c-470e-baa0-95d6872ff214'
+              target='_blank'
+              rel='noopener noreferrer'
             >
-              How It Works
-            </Button>
+              <Button
+                rounded={'full'}
+                size={'lg'}
+                fontWeight={'normal'}
+                px={6}
+                leftIcon={<PlayIcon h={4} w={4} color={'gray.300'} />}
+              >
+                How It Works
+              </Button>
+            </a>
           </Stack>
         </Stack>
-        <Flex
-          flex={1}
-          justify={'center'}
-          align={'center'}
+
+        <Blob
+          w={'150%'}
+          h={'150%'}
+          position={'absolute'}
+          top={'-20%'}
+          left={0}
+          zIndex={-1}
+          color={useColorModeValue('red.50', 'red.400')}
+        />
+        <Box
           position={'relative'}
-          w={'full'}
+          rounded={'2xl'}
+          boxShadow={'2xl'}
+          overflow={'hidden'}
         >
-          <Blob
-            w={'150%'}
-            h={'150%'}
+          <IconButton
+            aria-label={'Play Button'}
+            variant={'ghost'}
+            _hover={{ bg: 'transparent' }}
+            icon={<PlayIcon w={12} h={12} />}
+            size={'lg'}
+            color={'white'}
             position={'absolute'}
-            top={'-20%'}
-            left={0}
-            zIndex={-1}
-            color={useColorModeValue('red.50', 'red.400')}
           />
-          <Box
-            position={'relative'}
-            height={'300px'}
-            rounded={'2xl'}
-            boxShadow={'2xl'}
-            width={'full'}
-            overflow={'hidden'}
+          <div
+            style={{
+              position: 'relative',
+              width: '100%',
+              height: '0',
+              paddingBottom: '56.25%',
+            }}
           >
-            <IconButton
-              aria-label={'Play Button'}
-              variant={'ghost'}
-              _hover={{ bg: 'transparent' }}
-              icon={<PlayIcon w={12} h={12} />}
-              size={'lg'}
-              color={'white'}
-              position={'absolute'}
-              left={'50%'}
-              top={'50%'}
-              transform={'translateX(-50%) translateY(-50%)'}
-            />
-            <Image
-              alt={'Hero Image'}
-              fit={'cover'}
-              align={'center'}
-              w={'100%'}
-              h={'100%'}
-              src={
-                'https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?ixlib=rb-1.2.1&ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&auto=format&fit=crop&w=800&q=80'
-              }
-            />
-          </Box>
-        </Flex>
+            <iframe
+              src='https://www.loom.com/embed/7d0acc8b204348e79c777368be4c142c?sid=8f99775d-22d8-4085-a235-5fef0f8bd649'
+              frameborder='0'
+              webkitallowfullscreen
+              mozallowfullscreen
+              allowfullscreen
+            ></iframe>
+          </div>
+        </Box>
       </Stack>
     </Container>
   );
